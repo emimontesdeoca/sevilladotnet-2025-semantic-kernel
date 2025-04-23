@@ -10,13 +10,11 @@ var endpoint = Environment.GetEnvironmentVariable("OPENAI_ENDPOINT", Environment
 var apiKey = Environment.GetEnvironmentVariable("OPENAI_APIKEY", EnvironmentVariableTarget.User);
 var deploymentName = "gpt-4o-mini";
 
-var chatService = new AzureOpenAIChatCompletionService(deploymentName, endpoint!, apiKey!);
-
 var kernelBuilder = Kernel.CreateBuilder();
 
+kernelBuilder.Plugins.AddFromType<PizzaMenuPlugin>();
 kernelBuilder.Plugins.AddFromType<ShoppingCartPlugin>();
 kernelBuilder.Plugins.AddFromType<PaymentPlugin>();
-kernelBuilder.Plugins.AddFromType<PizzaMenuPlugin>();
 
 var kernel = kernelBuilder.Build();
 
@@ -25,17 +23,19 @@ var promptSettings = new AzureOpenAIPromptExecutionSettings()
     ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
 };
 
-var systemMessage = "You are a member of a pizza shop called PizzerIA, people are going to come to you asking for information about pizzas, orders and pay. You must only answer about this and do not answer about any other topic!";
+var chatService = new AzureOpenAIChatCompletionService(deploymentName, endpoint!, apiKey!);
+
+var systemMessage = "Eres un asistente de una Pizerria, la gente va a venir y te a preguntar sobre pizzas, para pedir y para pagar. Solo responde sobre cosas de la pizzeria, no respondas a otras cosas.";
 var chatHistory = new ChatHistory(systemMessage);
 
 while (true)
 {
     Console.Write("Q: ");
-    var prompt = Console.ReadLine();
-    chatHistory.AddUserMessage(prompt!);
+    var question = Console.ReadLine();
+    chatHistory.AddUserMessage(question!);
 
     var answer = await chatService.GetChatMessageContentAsync(chatHistory, promptSettings, kernel);
-    Console.WriteLine($"A: {answer.ToString()}");
+    Console.WriteLine($"A: {answer}");
 }
 
 public class PizzaMenuPlugin
